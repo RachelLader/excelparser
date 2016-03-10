@@ -1,21 +1,18 @@
 var express = require('express');
-var excelbuilder = require('excel-builder');
+var excelbuilder = require('msexcel-builder');
 var download= require('downloader');
 var path = require('path');
 var xlsx2 = require('node-xlsx');
 
 var xlsx = require('xlsx');
-var bodyParser = require('body-parser');
-var port = process.env.PORT || 8000;
+var port =  8000;
 var app = module.exports = express();
-var zip = new JSZip();
 var underscore= require('underscore');
 app.get('/', function(req, res) {
     res.sendFile(path.join(__dirname + '/index.html'));
 
 })
 
-app.use(bodyParser.json());
 var newExcel = []
 var idStorage = [];
 
@@ -30,22 +27,32 @@ var readExcelFile = function(file) {
             newExcel.push(person);
         }
     }
-    console.log('DONE', newExcel);
+    console.log('DONE');
     createExcelFile();
 
 }
 
 var createExcelFile = function() {
-        var patientWB = excelbuilder.createWorkbook();
-        var patients = patientWB.createWorksheet({ name: 'Patient Data' });
+        var workbook = excelbuilder.createWorkbook('./','newData.xlsx');
+        var patients = workbook.createSheet('PatientData',3000, 2000);
+        for(var x=0; x<newExcel.length;x++){
+           var patient=newExcel[x];
+           // console.log('patient', patient)
+           for(var i=1; i<patient.length+1;i++){
+               console.log('length', i-1, patient[i-1])
 
-        patients.setData(newExcel); //<-- Here's the important part
-
-        patientWB.addWorksheet(patients);
-
-        var data = excelbuilder.createFile(patientWB);
-        downloader('PatientData.xlsx', data);
-    };
+            // console.log('patient:', patient[i-1])
+            patients.set(i,x+1,patient[i-1]);
+           }
+        }
+        console.log('done creating file');
+workbook.save(function(err){
+    if (err)
+      throw err;
+    else
+      console.log('congratulations, your workbook created');
+  });
+};
 
 
 readExcelFile();
